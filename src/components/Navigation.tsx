@@ -6,8 +6,7 @@ const Navigation = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: "/", label: "Markets" },
-    { path: "/trading", label: "Trading Simulator" },
+    { path: "/", label: "Trading Simulator" },
   ];
 
   return (

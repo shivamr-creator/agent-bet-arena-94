@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PredictionMarkets from "./pages/PredictionMarkets";
 import TradingSimulator from "./pages/TradingSimulator";
 import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";
@@ -18,8 +17,7 @@ const App = () => (
       <BrowserRouter>
         <Navigation />
         <Routes>
-          <Route path="/" element={<PredictionMarkets />} />
-          <Route path="/trading" element={<TradingSimulator />} />
+          <Route path="/" element={<TradingSimulator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
