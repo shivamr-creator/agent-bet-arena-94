@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PortfolioEntry {
@@ -110,6 +114,11 @@ const recentPositions: PositionDetail[] = [
 ];
 
 const PortfolioHistory = () => {
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set([2])); // Current hour (latest) expanded by default
+  const [selectedAgent, setSelectedAgent] = useState("all");
+
+  const agents = ["all", "agent-1", "agent-2", "agent-3", "agent-4"];
+
   const getPnLColor = (pnl: number) => {
     return pnl >= 0 ? "text-success" : "text-destructive";
   };
@@ -118,19 +127,54 @@ const PortfolioHistory = () => {
     return status === "Open" ? "bg-success" : "bg-muted";
   };
 
+  const toggleRowExpansion = (index: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const getPositionsForHour = (hourIndex: number) => {
+    // Mock data - in real app this would filter based on the hour
+    return recentPositions;
+  };
+
+  const calculateTotalPnL = (entry: PortfolioEntry) => {
+    return entry.btc.pnl + entry.eth.pnl + entry.sol.pnl + entry.xrp.pnl + entry.bnb.pnl;
+  };
+
   return (
     <div className="space-y-6">
-      {/* Portfolio History */}
+      {/* Agent Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Portfolio History</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Portfolio History
+            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select Agent" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Agents</SelectItem>
+                <SelectItem value="agent-1">Agent 1</SelectItem>
+                <SelectItem value="agent-2">Agent 2</SelectItem>
+                <SelectItem value="agent-3">Agent 3</SelectItem>
+                <SelectItem value="agent-4">Agent 4</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
+                  <TableHead className="w-12"></TableHead>
                   <TableHead className="min-w-32">Time</TableHead>
+                  <TableHead className="text-center">Total PnL</TableHead>
                   <TableHead className="text-center">BTC</TableHead>
                   <TableHead className="text-center">ETH</TableHead>
                   <TableHead className="text-center">SOL</TableHead>
@@ -139,108 +183,136 @@ const PortfolioHistory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {portfolioData.map((entry, index) => (
-                  <TableRow key={index} className="border-border">
-                    <TableCell className="font-mono text-sm">{entry.time}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div className={cn("font-semibold", getPnLColor(entry.btc.pnl))}>
-                          ${entry.btc.pnl.toLocaleString()} ({entry.btc.leverage})
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          PnL: {entry.btc.pnl >= 0 ? '+' : ''}${entry.btc.pnl}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div className={cn("font-semibold", getPnLColor(entry.eth.pnl))}>
-                          ${entry.eth.pnl.toLocaleString()} ({entry.eth.leverage})
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          PnL: {entry.eth.pnl >= 0 ? '+' : ''}${entry.eth.pnl}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div className={cn("font-semibold", getPnLColor(entry.sol.pnl))}>
-                          ${entry.sol.pnl.toLocaleString()} ({entry.sol.leverage})
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          PnL: {entry.sol.pnl >= 0 ? '+' : ''}${entry.sol.pnl}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div className={cn("font-semibold", getPnLColor(entry.xrp.pnl))}>
-                          ${entry.xrp.pnl.toLocaleString()} ({entry.xrp.leverage})
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          PnL: {entry.xrp.pnl >= 0 ? '+' : ''}${entry.xrp.pnl}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div className={cn("font-semibold", getPnLColor(entry.bnb.pnl))}>
-                          ${entry.bnb.pnl.toLocaleString()} ({entry.bnb.leverage})
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          PnL: {entry.bnb.pnl >= 0 ? '+' : ''}${entry.bnb.pnl}
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Hour Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Hour - Position Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Token</TableHead>
-                  <TableHead>Direction</TableHead>
-                  <TableHead>Leverage</TableHead>
-                  <TableHead>Entry Price</TableHead>
-                  <TableHead>Current/Exit Price</TableHead>
-                  <TableHead>Position Size</TableHead>
-                  <TableHead>Margin Used</TableHead>
-                  <TableHead>PnL (USDC)</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentPositions.map((position, index) => (
-                  <TableRow key={index} className="border-border">
-                    <TableCell className="font-semibold">{position.token}</TableCell>
-                    <TableCell>{position.direction}</TableCell>
-                    <TableCell>{position.leverage}</TableCell>
-                    <TableCell>{position.entryPrice}</TableCell>
-                    <TableCell>{position.currentPrice}</TableCell>
-                    <TableCell>{position.positionSize}</TableCell>
-                    <TableCell>{position.marginUsed}</TableCell>
-                    <TableCell className={cn("font-semibold", getPnLColor(position.pnl))}>
-                      {position.pnl >= 0 ? '+' : ''}${position.pnl.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(position.status)}>
-                        {position.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {portfolioData.map((entry, index) => {
+                  const isExpanded = expandedRows.has(index);
+                  const isCurrentHour = index === portfolioData.length - 1;
+                  const totalPnL = calculateTotalPnL(entry);
+                  
+                  return (
+                    <>
+                      <TableRow 
+                        key={index} 
+                        className={cn(
+                          "border-border cursor-pointer hover:bg-muted/50",
+                          isCurrentHour && "bg-accent/20"
+                        )}
+                        onClick={() => !isCurrentHour && toggleRowExpansion(index)}
+                      >
+                        <TableCell>
+                          {!isCurrentHour && (
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          {isCurrentHour && (
+                            <div className="text-xs text-muted-foreground px-2">Current</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{entry.time}</TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-bold text-lg", getPnLColor(totalPnL))}>
+                            {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-semibold", getPnLColor(entry.btc.pnl))}>
+                            {entry.btc.pnl >= 0 ? '+' : ''}${entry.btc.pnl}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.btc.leverage}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-semibold", getPnLColor(entry.eth.pnl))}>
+                            {entry.eth.pnl >= 0 ? '+' : ''}${entry.eth.pnl}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.eth.leverage}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-semibold", getPnLColor(entry.sol.pnl))}>
+                            {entry.sol.pnl >= 0 ? '+' : ''}${entry.sol.pnl}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.sol.leverage}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-semibold", getPnLColor(entry.xrp.pnl))}>
+                            {entry.xrp.pnl >= 0 ? '+' : ''}${entry.xrp.pnl}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.xrp.leverage}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className={cn("font-semibold", getPnLColor(entry.bnb.pnl))}>
+                            {entry.bnb.pnl >= 0 ? '+' : ''}${entry.bnb.pnl}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.bnb.leverage}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* Expanded Details */}
+                      {(isExpanded || isCurrentHour) && (
+                        <TableRow key={`details-${index}`} className="border-0">
+                          <TableCell colSpan={8} className="p-0">
+                            <div className="bg-muted/30 p-4 border-l-4 border-primary/20">
+                              <div className="text-sm font-medium mb-3 text-muted-foreground">
+                                Position Details - {entry.time}
+                              </div>
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="border-border">
+                                      <TableHead className="h-8">Token</TableHead>
+                                      <TableHead className="h-8">Direction</TableHead>
+                                      <TableHead className="h-8">Leverage</TableHead>
+                                      <TableHead className="h-8">Entry Price</TableHead>
+                                      <TableHead className="h-8">Current/Exit Price</TableHead>
+                                      <TableHead className="h-8">Position Size</TableHead>
+                                      <TableHead className="h-8">Margin Used</TableHead>
+                                      <TableHead className="h-8">PnL (USDC)</TableHead>
+                                      <TableHead className="h-8">Status</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {getPositionsForHour(index).map((position, posIndex) => (
+                                      <TableRow key={posIndex} className="border-border">
+                                        <TableCell className="font-semibold py-2">{position.token}</TableCell>
+                                        <TableCell className="py-2">{position.direction}</TableCell>
+                                        <TableCell className="py-2">{position.leverage}</TableCell>
+                                        <TableCell className="py-2">{position.entryPrice}</TableCell>
+                                        <TableCell className="py-2">{position.currentPrice}</TableCell>
+                                        <TableCell className="py-2">{position.positionSize}</TableCell>
+                                        <TableCell className="py-2">{position.marginUsed}</TableCell>
+                                        <TableCell className={cn("font-semibold py-2", getPnLColor(position.pnl))}>
+                                          {position.pnl >= 0 ? '+' : ''}${position.pnl.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="py-2">
+                                          <Badge className={getStatusColor(position.status)}>
+                                            {position.status}
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
