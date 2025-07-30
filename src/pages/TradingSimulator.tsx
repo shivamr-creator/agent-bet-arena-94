@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   LineChart, 
   Line, 
@@ -16,11 +14,11 @@ import {
   Area,
   AreaChart
 } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { TrendingUp, TrendingDown, Bot, Eye, DollarSign, Timer, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Bot, Eye, DollarSign, Timer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import TradingModal from "@/components/TradingModal";
+import SimpleBuyModal from "@/components/SimpleBuyModal";
+import AgentPortfolioChart from "@/components/AgentPortfolioChart";
 import PortfolioHistory from "@/components/PortfolioHistory";
 
 interface Agent {
@@ -225,9 +223,8 @@ const markets = [
 ];
 
 const TradingSimulator = () => {
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [buyModalOpen, setBuyModalOpen] = useState(false);
-  const [selectedAgentForBetting, setSelectedAgentForBetting] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedAgentForBetting, setSelectedAgentForBetting] = useState<Agent | null>(agents[0]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -243,7 +240,7 @@ const TradingSimulator = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full max-w-[1424px] mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Agent Trading Arena</h1>
         <p className="text-muted-foreground text-lg">
@@ -251,210 +248,258 @@ const TradingSimulator = () => {
         </p>
       </div>
 
-      {/* Market Price Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-8">
-        {markets.map((market) => (
-          <Card key={market.symbol}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{market.name}</CardTitle>
-                <div className="text-right">
-                   <div className="text-xl font-bold">
-                     {market.symbol === 'XRP' ? `$${market.price.toFixed(2)}` : `$${market.price.toLocaleString()}`}
-                   </div>
-                  <div className={cn(
-                    "flex items-center gap-1 text-sm font-medium",
-                    market.changePercent >= 0 ? "text-green-600" : "text-red-600"
-                  )}>
-                     {market.changePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                     {market.changePercent >= 0 ? '+' : ''}{market.symbol === 'XRP' ? market.change.toFixed(2) : market.change} ({market.changePercent}%)
-                  </div>
-                </div>
+      <div className="flex gap-6">
+        {/* Main Content - Left Side */}
+        <div className="flex-1">
+          {/* Portfolio Chart */}
+          <div className="mb-8">
+            <AgentPortfolioChart />
+          </div>
+
+          {/* Agent Performance */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-xl">Agent Performance</CardTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Timer className="w-4 h-4" />
+                Trading session: 6h 24m remaining
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={market.data}>
-                    <defs>
-                      <linearGradient id={`gradient-${market.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis 
-                      dataKey="time" 
-                      className="text-muted-foreground"
-                      tick={{ fontSize: 10 }}
-                    />
-                    <YAxis 
-                      domain={['dataMin - 50', 'dataMax + 50']}
-                      className="text-muted-foreground"
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(value) => market.symbol === 'XRP' ? `$${value.toFixed(2)}` : `$${value.toLocaleString()}`}
-                    />
-                    <Tooltip 
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-                              <p className="text-sm font-medium">{label}</p>
-                                <p className="text-sm text-primary">
-                                  {market.symbol}: {market.symbol === 'XRP' ? `$${(payload[0].value as number)?.toFixed(2)}` : `$${(payload[0].value as number)?.toLocaleString()}`}
-                                </p>
+              <div className="space-y-4">
+                {agents.map((agent, index) => (
+                  <div 
+                    key={agent.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer",
+                      selectedAgent?.id === agent.id && "bg-accent"
+                    )}
+                    onClick={() => setSelectedAgent(agent)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-lg font-bold text-muted-foreground">
+                        #{index + 1}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{agent.name}</span>
+                        <Badge 
+                          variant="outline" 
+                          className={cn("text-xs", getStatusColor(agent.status))}
+                        >
+                          {agent.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-8">
+                      <div className="text-right">
+                        <div className={cn("text-lg font-bold", getPnLColor(agent.pnl))}>
+                          {agent.pnl >= 0 ? '+' : ''}${agent.pnl.toFixed(2)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {agent.pnlPercent >= 0 ? '+' : ''}{agent.pnlPercent}%
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-sm font-medium">{agent.winRate}%</div>
+                        <div className="text-xs text-muted-foreground">Win Rate</div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-sm font-medium">${agent.portfolio.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Portfolio</div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-1" />
+                              Strategy
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>{agent.name} - Strategy & Positions</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-semibold mb-2">Trading Strategy</h4>
+                                <p className="text-muted-foreground">{agent.strategy}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-2">Current Positions</h4>
+                                <div className="grid grid-cols-3 gap-4">
+                                  {Object.entries(agent.positions).map(([asset, position]) => (
+                                    <div key={asset} className="p-3 border border-border rounded-lg">
+                                      <div className="font-medium">{asset}</div>
+                                      <div className="text-sm text-muted-foreground">
+                                        ${position.amount.toLocaleString()}
+                                      </div>
+                                      <div className={cn(
+                                        "text-sm font-medium",
+                                        getPnLColor(position.pnl)
+                                      )}>
+                                        {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      fill={`url(#gradient-${market.symbol})`}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                          </DialogContent>
+                        </Dialog>
+                        
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAgentForBetting(agent);
+                          }}
+                        >
+                          <DollarSign className="w-4 h-4 mr-1" />
+                          Bet on Agent
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Agent Performance */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-xl">Agent Performance</CardTitle>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Timer className="w-4 h-4" />
-            Trading session: 6h 24m remaining
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {agents.map((agent, index) => (
-              <div 
-                key={agent.id}
-                className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="text-lg font-bold text-muted-foreground">
-                    #{index + 1}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Bot className="w-5 h-5 text-primary" />
-                    <span className="font-medium">{agent.name}</span>
-                    <Badge 
-                      variant="outline" 
-                      className={cn("text-xs", getStatusColor(agent.status))}
-                    >
-                      {agent.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-8">
-                  <div className="text-right">
-                    <div className={cn("text-lg font-bold", getPnLColor(agent.pnl))}>
-                      {agent.pnl >= 0 ? '+' : ''}${agent.pnl.toFixed(2)}
+          {/* Agent Details - Graph and Resolution */}
+          {selectedAgent && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>{selectedAgent.name} - Market Price History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="graph" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="graph">Graph</TabsTrigger>
+                    <TabsTrigger value="resolution">Resolution</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="graph" className="mt-6">
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={btcPriceData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="time" className="text-muted-foreground" />
+                          <YAxis className="text-muted-foreground" />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="price" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {agent.pnlPercent >= 0 ? '+' : ''}{agent.pnlPercent}%
+                  </TabsContent>
+                  
+                  <TabsContent value="resolution" className="mt-6">
+                    <div className="text-center py-8">
+                      <h3 className="text-lg font-semibold mb-2">Market Resolution</h3>
+                      <p className="text-muted-foreground">
+                        This agent's performance will be resolved based on portfolio growth over the trading session.
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Market Price Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-8">
+            {markets.map((market) => (
+              <Card key={market.symbol}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{market.name}</CardTitle>
+                    <div className="text-right">
+                       <div className="text-xl font-bold">
+                         {market.symbol === 'XRP' ? `$${market.price.toFixed(2)}` : `$${market.price.toLocaleString()}`}
+                       </div>
+                      <div className={cn(
+                        "flex items-center gap-1 text-sm font-medium",
+                        market.changePercent >= 0 ? "text-green-600" : "text-red-600"
+                      )}>
+                         {market.changePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                         {market.changePercent >= 0 ? '+' : ''}{market.symbol === 'XRP' ? market.change.toFixed(2) : market.change} ({market.changePercent}%)
+                      </div>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{agent.winRate}%</div>
-                    <div className="text-xs text-muted-foreground">Win Rate</div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-sm font-medium">${agent.portfolio.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Portfolio</div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4 mr-1" />
-                          Strategy
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>{agent.name} - Strategy & Positions</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Trading Strategy</h4>
-                            <p className="text-muted-foreground">{agent.strategy}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Current Positions</h4>
-                            <div className="grid grid-cols-3 gap-4">
-                              {Object.entries(agent.positions).map(([asset, position]) => (
-                                <div key={asset} className="p-3 border border-border rounded-lg">
-                                  <div className="font-medium">{asset}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    ${position.amount.toLocaleString()}
-                                  </div>
-                                  <div className={cn(
-                                    "text-sm font-medium",
-                                    getPnLColor(position.pnl)
-                                  )}>
-                                    {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
-                                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={market.data}>
+                        <defs>
+                          <linearGradient id={`gradient-${market.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis 
+                          dataKey="time" 
+                          className="text-muted-foreground"
+                          tick={{ fontSize: 10 }}
+                        />
+                        <YAxis 
+                          domain={['dataMin - 50', 'dataMax + 50']}
+                          className="text-muted-foreground"
+                          tick={{ fontSize: 10 }}
+                          tickFormatter={(value) => market.symbol === 'XRP' ? `$${value.toFixed(2)}` : `$${value.toLocaleString()}`}
+                        />
+                        <Tooltip 
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+                                  <p className="text-sm font-medium">{label}</p>
+                                    <p className="text-sm text-primary">
+                                      {market.symbol}: {market.symbol === 'XRP' ? `$${(payload[0].value as number)?.toFixed(2)}` : `$${(payload[0].value as number)?.toLocaleString()}`}
+                                    </p>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <Button 
-                      size="sm" 
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => {
-                        setSelectedAgentForBetting(agent);
-                        setBuyModalOpen(true);
-                      }}
-                    >
-                      <DollarSign className="w-4 h-4 mr-1" />
-                      Bet on Agent
-                    </Button>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="price"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          fill={`url(#gradient-${market.symbol})`}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Portfolio History Section */}
-      <div className="mb-8">
-        <PortfolioHistory />
+          {/* Portfolio History Section */}
+          <div className="mb-8">
+            <PortfolioHistory />
+          </div>
+        </div>
+
+        {/* Modal - Always visible on the right */}
+        <div className="w-80 flex-shrink-0">
+          {selectedAgentForBetting && (
+            <SimpleBuyModal
+              agentName={selectedAgentForBetting.name}
+              price={75}
+            />
+          )}
+        </div>
       </div>
-
-      {/* Trading Modal */}
-      {selectedAgentForBetting && (
-        <TradingModal
-          isOpen={buyModalOpen}
-          onClose={() => {
-            setBuyModalOpen(false);
-            setSelectedAgentForBetting(null);
-          }}
-          marketTitle="Agent Performance Prediction"
-          type="yes"
-          price={75} // Example price for agent success
-          agentName={selectedAgentForBetting.name}
-        />
-      )}
-
     </div>
   );
 };
