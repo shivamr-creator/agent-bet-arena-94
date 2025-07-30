@@ -21,7 +21,7 @@ import { TrendingUp, TrendingDown, Bot, Eye, DollarSign, Timer, AlertTriangle } 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import TradingModal from "@/components/TradingModal";
-import TradeHistory from "@/components/TradeHistory";
+import PortfolioHistory from "@/components/PortfolioHistory";
 
 interface Agent {
   id: string;
@@ -393,9 +393,9 @@ const TradingSimulator = () => {
         </CardContent>
       </Card>
 
-      {/* Trade History Section */}
+      {/* Portfolio History Section */}
       <div className="mb-8">
-        <TradeHistory />
+        <PortfolioHistory />
       </div>
 
       {/* Trading Modal */}
