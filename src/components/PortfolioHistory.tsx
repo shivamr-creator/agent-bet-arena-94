@@ -115,9 +115,35 @@ const recentPositions: PositionDetail[] = [
 
 const PortfolioHistory = () => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set([2])); // Current hour (latest) expanded by default
-  const [selectedAgent, setSelectedAgent] = useState("all");
+  const [selectedAgent, setSelectedAgent] = useState("QuantumTrader AI");
+  const [isAutoRotating, setIsAutoRotating] = useState(true);
+  const [manualSelectTime, setManualSelectTime] = useState<number | null>(null);
 
-  const agents = ["all", "agent-1", "agent-2", "agent-3", "agent-4"];
+  const agents = ["QuantumTrader AI", "AlphaBot Pro", "TrendMaster", "CryptoSage", "MarketMind AI"];
+
+  // Auto-rotation effect
+  useState(() => {
+    const interval = setInterval(() => {
+      if (isAutoRotating && !manualSelectTime) {
+        setSelectedAgent(prev => {
+          const currentIndex = agents.indexOf(prev);
+          const nextIndex = (currentIndex + 1) % agents.length;
+          return agents[nextIndex];
+        });
+      } else if (manualSelectTime && Date.now() - manualSelectTime > 30000) {
+        setManualSelectTime(null);
+        setIsAutoRotating(true);
+      }
+    }, isAutoRotating ? 10000 : 1000);
+
+    return () => clearInterval(interval);
+  });
+
+  const handleAgentSelect = (agent: string) => {
+    setSelectedAgent(agent);
+    setManualSelectTime(Date.now());
+    setIsAutoRotating(false);
+  };
 
   const getPnLColor = (pnl: number) => {
     return pnl >= 0 ? "text-success" : "text-destructive";
@@ -148,24 +174,23 @@ const PortfolioHistory = () => {
 
   return (
     <div className="space-y-6">
-      {/* Agent Selection */}
+      {/* Agent Navigation */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Portfolio History
-            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select Agent" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Agents</SelectItem>
-                <SelectItem value="agent-1">Agent 1</SelectItem>
-                <SelectItem value="agent-2">Agent 2</SelectItem>
-                <SelectItem value="agent-3">Agent 3</SelectItem>
-                <SelectItem value="agent-4">Agent 4</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardTitle>
+          <CardTitle>Portfolio History</CardTitle>
+          <div className="flex gap-2 flex-wrap">
+            {agents.map((agent) => (
+              <Button
+                key={agent}
+                variant={selectedAgent === agent ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleAgentSelect(agent)}
+                className={selectedAgent === agent ? "bg-primary" : ""}
+              >
+                {agent}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

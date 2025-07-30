@@ -7,12 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface SimpleBuyModalProps {
   agentName: string;
   price: number; // in cents
+  onAgentChange?: (agentName: string) => void;
 }
 
-const SimpleBuyModal = ({ agentName, price }: SimpleBuyModalProps) => {
+const SimpleBuyModal = ({ agentName, price, onAgentChange }: SimpleBuyModalProps) => {
   const [amount, setAmount] = useState<string>("0");
   const [orderType, setOrderType] = useState<"market">("market");
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const [selectedAgent, setSelectedAgent] = useState(agentName);
+
+  const agents = ["QuantumTrader AI", "AlphaBot Pro", "TrendMaster", "CryptoSage", "MarketMind AI"];
+
+  const handleAgentChange = (newAgent: string) => {
+    setSelectedAgent(newAgent);
+    onAgentChange?.(newAgent);
+  };
 
   const calculateWinnings = (investmentAmount: number, priceInCents: number): number => {
     if (priceInCents <= 0) return 0;
@@ -41,10 +50,19 @@ const SimpleBuyModal = ({ agentName, price }: SimpleBuyModalProps) => {
       <CardContent className="p-4 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-xs font-medium">{agentName.split(' ').map(n => n[0]).join('')}</span>
+            <span className="text-xs font-medium">{selectedAgent.split(' ').map(n => n[0]).join('')}</span>
           </div>
           <div className="flex-1">
-            <h3 className="font-medium text-sm">{agentName}</h3>
+            <Select value={selectedAgent} onValueChange={handleAgentChange}>
+              <SelectTrigger className="h-8 border-0 bg-transparent p-0 font-medium text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.map((agent) => (
+                  <SelectItem key={agent} value={agent}>{agent}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -66,16 +84,6 @@ const SimpleBuyModal = ({ agentName, price }: SimpleBuyModalProps) => {
             >
               Sell
             </Button>
-          </div>
-          <div className="text-right">
-            <Select value={orderType} onValueChange={(value) => setOrderType(value as "market")}>
-              <SelectTrigger className="w-20 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="market">Market</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
