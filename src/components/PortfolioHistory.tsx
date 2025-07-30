@@ -183,9 +183,10 @@ const PortfolioHistory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {portfolioData.map((entry, index) => {
+                {portfolioData.slice().reverse().map((entry, reverseIndex) => {
+                  const index = portfolioData.length - 1 - reverseIndex;
                   const isExpanded = expandedRows.has(index);
-                  const isCurrentHour = index === portfolioData.length - 1;
+                  const isCurrentHour = reverseIndex === 0;
                   const totalPnL = calculateTotalPnL(entry);
                   
                   return (

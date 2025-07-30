@@ -157,6 +157,30 @@ const solPriceData = [
   { time: "01:00", price: 196.75, volume: 1850 }
 ];
 
+// XRP Price Data
+const xrpPriceData = [
+  { time: "18:00", price: 0.62, volume: 15000 },
+  { time: "19:00", price: 0.61, volume: 18000 },
+  { time: "20:00", price: 0.64, volume: 12000 },
+  { time: "21:00", price: 0.63, volume: 14000 },
+  { time: "22:00", price: 0.65, volume: 16000 },
+  { time: "23:00", price: 0.63, volume: 11000 },
+  { time: "00:00", price: 0.66, volume: 13000 },
+  { time: "01:00", price: 0.67, volume: 9500 }
+];
+
+// BNB Price Data
+const bnbPriceData = [
+  { time: "18:00", price: 298, volume: 5000 },
+  { time: "19:00", price: 295, volume: 6200 },
+  { time: "20:00", price: 305, volume: 4100 },
+  { time: "21:00", price: 302, volume: 5600 },
+  { time: "22:00", price: 308, volume: 5950 },
+  { time: "23:00", price: 304, volume: 4200 },
+  { time: "00:00", price: 311, volume: 4800 },
+  { time: "01:00", price: 314, volume: 3850 }
+];
+
 const markets = [
   {
     symbol: "BTC",
@@ -181,6 +205,22 @@ const markets = [
     change: 9.30,
     changePercent: 4.96,
     data: solPriceData
+  },
+  {
+    symbol: "XRP",
+    name: "XRP",
+    price: 0.67,
+    change: 0.05,
+    changePercent: 8.06,
+    data: xrpPriceData
+  },
+  {
+    symbol: "BNB",
+    name: "BNB",
+    price: 314.25,
+    change: 16.25,
+    changePercent: 5.45,
+    data: bnbPriceData
   }
 ];
 
@@ -212,20 +252,22 @@ const TradingSimulator = () => {
       </div>
 
       {/* Market Price Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-8">
         {markets.map((market) => (
           <Card key={market.symbol}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{market.name}</CardTitle>
                 <div className="text-right">
-                  <div className="text-xl font-bold">${market.price.toLocaleString()}</div>
+                   <div className="text-xl font-bold">
+                     {market.symbol === 'XRP' ? `$${market.price.toFixed(2)}` : `$${market.price.toLocaleString()}`}
+                   </div>
                   <div className={cn(
                     "flex items-center gap-1 text-sm font-medium",
                     market.changePercent >= 0 ? "text-green-600" : "text-red-600"
                   )}>
-                    {market.changePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                    +{market.change} ({market.changePercent}%)
+                     {market.changePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                     {market.changePercent >= 0 ? '+' : ''}{market.symbol === 'XRP' ? market.change.toFixed(2) : market.change} ({market.changePercent}%)
                   </div>
                 </div>
               </div>
@@ -250,7 +292,7 @@ const TradingSimulator = () => {
                       domain={['dataMin - 50', 'dataMax + 50']}
                       className="text-muted-foreground"
                       tick={{ fontSize: 10 }}
-                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                      tickFormatter={(value) => market.symbol === 'XRP' ? `$${value.toFixed(2)}` : `$${value.toLocaleString()}`}
                     />
                     <Tooltip 
                       content={({ active, payload, label }) => {
@@ -258,9 +300,9 @@ const TradingSimulator = () => {
                           return (
                             <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
                               <p className="text-sm font-medium">{label}</p>
-                              <p className="text-sm text-primary">
-                                {market.symbol}: ${payload[0].value?.toLocaleString()}
-                              </p>
+                                <p className="text-sm text-primary">
+                                  {market.symbol}: {market.symbol === 'XRP' ? `$${(payload[0].value as number)?.toFixed(2)}` : `$${(payload[0].value as number)?.toLocaleString()}`}
+                                </p>
                             </div>
                           );
                         }
