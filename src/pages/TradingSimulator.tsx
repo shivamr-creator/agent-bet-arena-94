@@ -479,7 +479,7 @@ const TradingSimulator = () => {
         </div>
 
         {/* Fixed Modal on the right */}
-        <div className="fixed top-20 right-4 w-80 z-10">
+        <div className="sticky top-4 w-80 z-10">
           <SimpleBuyModal agentName="QuantumTrader AI" price={65.2} />
         </div>
       </div>
