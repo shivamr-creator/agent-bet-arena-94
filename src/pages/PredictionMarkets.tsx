@@ -268,25 +268,12 @@ const PredictionMarkets = () => {
               </CardContent>
             </Card>
 
-            {/* Tabs for OrderBook, Graph, Resolution */}
-            <Tabs defaultValue="orderbook" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="orderbook">Order Book</TabsTrigger>
+            {/* Tabs for Graph, Resolution */}
+            <Tabs defaultValue="graph" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="graph">Graph</TabsTrigger>
                 <TabsTrigger value="resolution">Resolution</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="orderbook" className="mt-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-primary">{selectedMarket.yesPrice.toFixed(0)}% chance</h3>
-                      <div className="text-sm text-error">▼42%</div>
-                    </div>
-                    <OrderBook yesPrice={selectedMarket.yesPrice / 100} noPrice={selectedMarket.noPrice / 100} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
               
               <TabsContent value="graph" className="mt-6">
                 <Card>
